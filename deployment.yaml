@@ -1,0 +1,55 @@
+# 以Deployment部署Pod
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: springboot-demo
+  namespace: ingress-nginx
+spec: 
+  selector: 
+    matchLabels: 
+      app: springboot-demo
+  replicas: 1
+  template: 
+    metadata:
+      labels: 
+        app: springboot-demo
+    spec: 
+      containers: 
+      - name: springboot-demo
+        image: registry.cn-hangzhou.aliyuncs.com/sauvio/springboot-demo:1.0
+        ports: 
+        - containerPort: 8080
+        imagePullPolicy: Always
+      imagePullSecrets:
+      - name: regsecret
+      
+---
+# 创建Pod的Service
+apiVersion: v1
+kind: Service
+metadata: 
+  name: springboot-demo
+  namespace: ingress-nginx
+spec: 
+  ports: 
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector: 
+    app: springboot-demo
+---
+# 创建Ingress，定义访问规则
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata: 
+  name: springboot-demo
+  namespace: ingress-nginx
+spec: 
+  rules: 
+  - host: springboot.sauvio.com
+    http: 
+      paths: 
+      - path: /
+        backend: 
+          serviceName: springboot-demo
+          servicePort: 80
